@@ -8,7 +8,7 @@ GraphicsClass::GraphicsClass()
 {
 	m_D3D = 0;
 	m_Camera = 0;
-	m_Model = 0;
+	m_DogBodyModel = 0;
 	m_LightShader = 0;
 	m_Light = 0;
 }
@@ -52,20 +52,40 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
+	m_Camera->SetPosition(0.0f, 0.0f, -20.0f);
 	
+
+	// 강아지 몸
+
 	// Create the model object.
-	m_Model = new ModelClass;
-	if(!m_Model)
+	m_DogBodyModel = new ModelClass;
+	if(!m_DogBodyModel)
 	{
 		return false;
 	}
 
 	// Initialize the model object.
-	result = m_Model->Initialize(m_D3D->GetDevice(), "../Engine/data/DogBody.obj", L"../Engine/data/DogBody.png");
+	result = m_DogBodyModel->Initialize(m_D3D->GetDevice(), "../Engine/data/DogBody.obj", L"../Engine/data/DogBody.png");
 	if(!result)
 	{
-		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
+		MessageBox(hwnd, L"Could not initialize the dog body model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// 강아지 얼굴
+
+	// Create the model object.
+	m_DogHeadModel = new ModelClass;
+	if (!m_DogHeadModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_DogHeadModel->Initialize(m_D3D->GetDevice(), "../Engine/data/DogHead.obj", L"../Engine/data/DogHead.png");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the dog head model object.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -119,13 +139,23 @@ void GraphicsClass::Shutdown()
 		m_LightShader = 0;
 	}
 
+	// Releasing Models
+
 	// Release the model object.
-	if(m_Model)
+	if(m_DogBodyModel)
 	{
-		m_Model->Shutdown();
-		delete m_Model;
-		m_Model = 0;
+		m_DogBodyModel->Shutdown();
+		delete m_DogBodyModel;
+		m_DogBodyModel = 0;
 	}
+	// Release the model object.
+	if (m_DogHeadModel)
+	{
+		m_DogHeadModel->Shutdown();
+		delete m_DogHeadModel;
+		m_DogHeadModel = 0;
+	}
+
 
 	// Release the camera object.
 	if(m_Camera)
@@ -187,22 +217,42 @@ bool GraphicsClass::Render(float rotation)
 	m_D3D->GetWorldMatrix(worldMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
 
-	// Rotate the world matrix by the rotation value so that the triangle will spin.
-	D3DXMatrixRotationY(&worldMatrix, rotation);
-	D3DXMatrixScaling(&tmpMatrix, 0.5f, 0.5f, 0.5f);
-	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+	// 몸통 조절
+	//D3DXMatrixRotationY(&worldMatrix, rotation);
+	D3DXMatrixScaling(&worldMatrix, 0.5f, 0.5f, 0.5f);
+	//D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
 
 	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
-	m_Model->Render(m_D3D->GetDeviceContext());
+	m_DogBodyModel->Render(m_D3D->GetDeviceContext());
 	
 
 	// Render the model using the light shader.
 	
-	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, 
-								   m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(), 
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_DogBodyModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, 
+								   m_DogBodyModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(), 
 								   m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
 	if(!result)
+	{
+		return false;
+	}
+
+	// 머리 조절
+	D3DXMatrixTranslation(&tmpMatrix, 0.0f, 3.4f, 0.0f);
+	D3DXMatrixScaling(&worldMatrix, 0.4f, 0.4f, 0.4f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_DogHeadModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_DogHeadModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_DogHeadModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
 	{
 		return false;
 	}

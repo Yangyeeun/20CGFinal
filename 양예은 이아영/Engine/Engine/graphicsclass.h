@@ -44,7 +44,11 @@ private:
 private:
 	D3DClass* m_D3D;
 	CameraClass* m_Camera;
-	ModelClass* m_Model;
+
+	/*Models*/
+	ModelClass* m_DogBodyModel;
+	ModelClass* m_DogHeadModel;
+
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
 };
