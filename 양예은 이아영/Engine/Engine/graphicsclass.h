@@ -51,6 +51,8 @@ private:
 	ModelClass* m_DogHeadModel;
 	ModelClass* m_FloorModel;
 	ModelClass* m_BackWallModel;
+	ModelClass* m_LeftWallModel;
+	ModelClass* m_RightWallModel;
 	ModelClass* m_StageModel;
 
 	LightShaderClass* m_LightShader;

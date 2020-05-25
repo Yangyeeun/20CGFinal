@@ -11,6 +11,8 @@ GraphicsClass::GraphicsClass()
 	m_DogHeadModel = 0;
 	m_DogBodyModel = 0;
 	m_BackWallModel = 0;
+	m_LeftWallModel = 0;
+	m_RightWallModel = 0;
 	m_FloorModel = 0;
 	m_StageModel = 0;
 	m_LightShader = 0;
@@ -126,6 +128,36 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the BackWall model object.", L"Error", MB_OK);
 		return false;
 	}
+
+
+	m_LeftWallModel = new ModelClass;
+	if (!m_LeftWallModel)
+	{
+		return false;
+	}
+	// Initialize the model object.
+	result = m_LeftWallModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Wall.obj", L"../Engine/data/Wall.jpg");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the BackWall model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	m_RightWallModel = new ModelClass;
+	if (!m_RightWallModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_RightWallModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Wall.obj", L"../Engine/data/Wall.jpg");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the BackWall model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	
 
 	// 스테이지 모델
 
@@ -339,7 +371,7 @@ bool GraphicsClass::Render(float rotation)
 	// 바닥 조절
 	
 	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 0.7f);
-	D3DXMatrixTranslation(&worldMatrix, 40.0f, -6.0f, -30.0f);
+	D3DXMatrixTranslation(&worldMatrix, 35.0f, -5.5f, -30.0f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
 
@@ -360,7 +392,7 @@ bool GraphicsClass::Render(float rotation)
 	// 뒷 벽 조절
 
 	D3DXMatrixScaling(&tmpMatrix, 1.2f, 0.6f, 0.6f);
-	D3DXMatrixTranslation(&worldMatrix, 20.0f, -6.0f, 13.0f);
+	D3DXMatrixTranslation(&worldMatrix, 20.0f, -5.5f, 13.0f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
 
@@ -378,10 +410,52 @@ bool GraphicsClass::Render(float rotation)
 		return false;
 	}
 
+	// left 벽 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.02f, 0.6f, 10.0f);
+	D3DXMatrixTranslation(&worldMatrix, -1002.0f, -5.5f, -3.4f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_LeftWallModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_LeftWallModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_LeftWallModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// right 벽 조절
+
+		D3DXMatrixScaling(&tmpMatrix, 0.02f, 0.6f, 10.0f);
+		D3DXMatrixTranslation(&worldMatrix, 3002.0f, -5.5f, -3.4f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_RightWallModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_RightWallModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_RightWallModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+	
 	// 스테이지 조절
 
 	D3DXMatrixScaling(&tmpMatrix, 0.8f, 0.6f, 1.0f);
-	D3DXMatrixTranslation(&worldMatrix, 10.0f, -6.0f, -10.0f);
+	D3DXMatrixTranslation(&worldMatrix, -7.0f, -5.5f, -10.0f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
 
