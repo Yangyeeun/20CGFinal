@@ -56,6 +56,8 @@ private:
 	ModelClass* m_BarColModel;
 	ModelClass* m_BarRowModel;
 	ModelClass* m_StageModel;
+	ModelClass* m_TableModel;
+	ModelClass* m_GirlModel;
 
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;

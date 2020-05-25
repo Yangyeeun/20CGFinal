@@ -17,6 +17,8 @@ GraphicsClass::GraphicsClass()
 	m_BarRowModel = 0;
 	m_FloorModel = 0;
 	m_StageModel = 0;
+	m_TableModel = 0;
+	m_TableModel = 0;
 	m_LightShader = 0;
 	m_Light = 0;
 }
@@ -60,8 +62,26 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 10.0f, -50.0f);
+	m_Camera->SetPosition(0.0f, 20.0f, -50.0f);
+	m_Camera->SetRotation(20.0f, 0.0f, 0.0f);
 	
+
+	// Girl
+
+	// Create the model object.
+	m_GirlModel = new ModelClass;
+	if (!m_GirlModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_GirlModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Girl.obj", L"../Engine/data/Girl.png");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the dog body model object.", L"Error", MB_OK);
+		return false;
+	}
 
 	// 강아지 몸
 
@@ -124,7 +144,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Initialize the model object.
-	result = m_BackWallModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Wall.obj", L"../Engine/data/Wall.jpg");
+	result = m_BackWallModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Wall.obj", L"../Engine/data/Wall.png");
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the BackWall model object.", L"Error", MB_OK);
@@ -208,6 +228,23 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the Stage model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// 테이블
+
+	// Create the model object.
+	m_TableModel = new ModelClass;
+	if (!m_TableModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_TableModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Table.obj", L"../Engine/data/Table.png");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the dog head model object.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -303,14 +340,27 @@ bool GraphicsClass::Frame()
 {
 	bool result;
 	static float rotation = 0.0f;
+	static bool rotation_direction = true;//위
 
 
 	// Update the rotation variable each frame.
-	rotation += (float)D3DX_PI * 0.005f;
-	if(rotation > 360.0f)
+	if (rotation_direction == true)
 	{
-		rotation -= 360.0f;
+		rotation += (float)D3DX_PI * 0.002f;
+		if (rotation > 0.1f)
+		{
+			rotation_direction = false;
+		}
 	}
+	else if (rotation_direction == false)
+	{
+		rotation += (float)D3DX_PI * 0.002f*(-1);
+		if (rotation < -0.1f)
+		{
+			rotation_direction = true;
+		}
+	}
+	
 	
 	// Render the graphics scene.
 	result = Render(rotation);
@@ -387,6 +437,9 @@ bool GraphicsClass::Render(float rotation)
 	D3DXMatrixTranslation(&tmpMatrix, 0.0f, 3.4f, 0.0f);
 	D3DXMatrixScaling(&worldMatrix, 0.4f, 0.4f, 0.4f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+	D3DXMatrixRotationX(&tmpMatrix, rotation);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+	
 
 
 	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
@@ -405,8 +458,8 @@ bool GraphicsClass::Render(float rotation)
 
 	// 바닥 조절
 	
-	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 0.7f);
-	D3DXMatrixTranslation(&worldMatrix, 35.0f, -5.5f, -30.0f);
+	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 1.0f);
+	D3DXMatrixTranslation(&worldMatrix, 10.0f, -5.5f, -30.0f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
 
@@ -529,7 +582,7 @@ bool GraphicsClass::Render(float rotation)
 	}
 
 
-		D3DXMatrixScaling(&tmpMatrix, 0.5f, 2.0f, 0.15f);
+	D3DXMatrixScaling(&tmpMatrix, 0.5f, 2.0f, 0.15f);
 	D3DXMatrixTranslation(&worldMatrix, 80.0f, -2.5f, -118.0f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
@@ -542,6 +595,72 @@ bool GraphicsClass::Render(float rotation)
 
 	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_BarRowModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
 		m_BarRowModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Table 1 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.9f, 0.9f, 0.9f);
+	D3DXMatrixTranslation(&worldMatrix, 0.0f, -4.0f, -50.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+	
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_TableModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_TableModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_TableModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Table 2 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.9f, 0.9f, 0.9f);
+	D3DXMatrixTranslation(&worldMatrix, 25.0f, -4.0f, -50.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_TableModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_TableModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_TableModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Girl 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.4f, 0.4f, 0.4f);
+	D3DXMatrixTranslation(&worldMatrix, 55.0f, 4.0f, -110.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_GirlModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_GirlModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_GirlModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
 		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
 	if (!result)
 	{
