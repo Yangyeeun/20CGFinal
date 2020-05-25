@@ -8,7 +8,11 @@ GraphicsClass::GraphicsClass()
 {
 	m_D3D = 0;
 	m_Camera = 0;
+	m_DogHeadModel = 0;
 	m_DogBodyModel = 0;
+	m_BackWallModel = 0;
+	m_FloorModel = 0;
+	m_StageModel = 0;
 	m_LightShader = 0;
 	m_Light = 0;
 }
@@ -52,7 +56,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 0.0f, -20.0f);
+	m_Camera->SetPosition(0.0f, 10.0f, -50.0f);
 	
 
 	// °­¾ÆÁö ¸ö
@@ -89,6 +93,58 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// ¹Ù´Ú ¸ðµ¨
+
+	// Create the model object.
+	m_FloorModel = new ModelClass;
+	if (!m_FloorModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_FloorModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Floor.obj", L"../Engine/data/Floor.png");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the floor model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// º® ¸ðµ¨
+
+	// Create the model object.
+	m_BackWallModel = new ModelClass;
+	if (!m_BackWallModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_BackWallModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Wall.obj", L"../Engine/data/Wall.jpg");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the BackWall model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// ½ºÅ×ÀÌÁö ¸ðµ¨
+
+	// Create the model object.
+	m_StageModel = new ModelClass;
+	if (!m_StageModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_StageModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Stage.obj", L"../Engine/data/Stage.jpg");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the Stage model object.", L"Error", MB_OK);
+		return false;
+	}
+
+
 	// Create the light shader object.
 	m_LightShader = new LightShaderClass;
 	if(!m_LightShader)
@@ -114,9 +170,9 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// Initialize the light object.
 	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
+	m_Light->SetDirection(0.0f, -10.0f, 5.0f);
 	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetSpecularPower(32.0f);
+	m_Light->SetSpecularPower(16.0f);
 
 	return true;
 }
@@ -199,6 +255,29 @@ bool GraphicsClass::Frame()
 	return true;
 }
 
+void GraphicsClass::MovingCamera(int n)
+{
+	float speed = 0.2f;
+	
+	if (n == 1)
+	{
+		m_Camera->SetPosition(m_Camera->GetPosition().x, m_Camera->GetPosition().y, m_Camera->GetPosition().z + speed);
+	}
+	else if (n == 2)
+	{
+		m_Camera->SetPosition(m_Camera->GetPosition().x, m_Camera->GetPosition().y, m_Camera->GetPosition().z - speed);
+	}
+	else if (n == 3)
+	{
+		m_Camera->SetPosition(m_Camera->GetPosition().x - speed, m_Camera->GetPosition().y, m_Camera->GetPosition().z);
+	}
+	else if (n == 4)
+	{
+		m_Camera->SetPosition(m_Camera->GetPosition().x + speed, m_Camera->GetPosition().y, m_Camera->GetPosition().z);
+	}
+	return;
+}
+
 
 bool GraphicsClass::Render(float rotation)
 {
@@ -256,6 +335,70 @@ bool GraphicsClass::Render(float rotation)
 	{
 		return false;
 	}
+
+	// ¹Ù´Ú Á¶Àý
+	
+	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 0.7f);
+	D3DXMatrixTranslation(&worldMatrix, 40.0f, -3.0f, -40.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_FloorModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_FloorModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_FloorModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// µÞ º® Á¶Àý
+
+	D3DXMatrixScaling(&tmpMatrix, 0.8f, 0.6f, 0.6f);
+	D3DXMatrixTranslation(&worldMatrix, 10.0f, 0.0f, 13.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_BackWallModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_BackWallModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_BackWallModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// ½ºÅ×ÀÌÁö Á¶Àý
+
+	D3DXMatrixScaling(&tmpMatrix, 0.8f, 0.6f, 0.6f);
+	D3DXMatrixTranslation(&worldMatrix, 10.0f, 0.0f, 13.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_StageModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_StageModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_StageModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
 
 	// Present the rendered scene to the screen.
 	m_D3D->EndScene();

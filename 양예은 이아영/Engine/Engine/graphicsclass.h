@@ -37,6 +37,7 @@ public:
 	bool Initialize(int, int, HWND);
 	void Shutdown();
 	bool Frame();
+	void MovingCamera(int);
 
 private:
 	bool Render(float);
@@ -48,6 +49,9 @@ private:
 	/*Models*/
 	ModelClass* m_DogBodyModel;
 	ModelClass* m_DogHeadModel;
+	ModelClass* m_FloorModel;
+	ModelClass* m_BackWallModel;
+	ModelClass* m_StageModel;
 
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;

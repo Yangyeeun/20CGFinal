@@ -113,6 +113,25 @@ void SystemClass::Run()
 		}
 		else
 		{
+			
+			/*WASD Moving*/
+			if (m_Input->IsKeyDown(87))//W
+			{
+				m_Graphics->MovingCamera(1);
+			}
+			else if (m_Input->IsKeyDown(83))//S
+			{
+				m_Graphics->MovingCamera(2);
+			}
+			if (m_Input->IsKeyDown(65))//A
+			{
+				m_Graphics->MovingCamera(3);
+			}
+			else if (m_Input->IsKeyDown(68))//D
+			{
+				m_Graphics->MovingCamera(4);
+			}
+
 			// Otherwise do the frame processing.
 			result = Frame();
 			if(!result)
