@@ -339,7 +339,7 @@ bool GraphicsClass::Render(float rotation)
 	// 바닥 조절
 	
 	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 0.7f);
-	D3DXMatrixTranslation(&worldMatrix, 40.0f, -3.0f, -40.0f);
+	D3DXMatrixTranslation(&worldMatrix, 40.0f, -6.0f, -30.0f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
 
@@ -359,8 +359,8 @@ bool GraphicsClass::Render(float rotation)
 
 	// 뒷 벽 조절
 
-	D3DXMatrixScaling(&tmpMatrix, 0.8f, 0.6f, 0.6f);
-	D3DXMatrixTranslation(&worldMatrix, 10.0f, 0.0f, 13.0f);
+	D3DXMatrixScaling(&tmpMatrix, 1.2f, 0.6f, 0.6f);
+	D3DXMatrixTranslation(&worldMatrix, 20.0f, -6.0f, 13.0f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
 
@@ -380,8 +380,8 @@ bool GraphicsClass::Render(float rotation)
 
 	// 스테이지 조절
 
-	D3DXMatrixScaling(&tmpMatrix, 0.8f, 0.6f, 0.6f);
-	D3DXMatrixTranslation(&worldMatrix, 10.0f, 0.0f, 13.0f);
+	D3DXMatrixScaling(&tmpMatrix, 0.8f, 0.6f, 1.0f);
+	D3DXMatrixTranslation(&worldMatrix, 10.0f, -6.0f, -10.0f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
 
