@@ -13,6 +13,8 @@ GraphicsClass::GraphicsClass()
 	m_BackWallModel = 0;
 	m_LeftWallModel = 0;
 	m_RightWallModel = 0;
+	m_BarColModel = 0;
+	m_BarRowModel = 0;
 	m_FloorModel = 0;
 	m_StageModel = 0;
 	m_LightShader = 0;
@@ -176,7 +178,40 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// 바 모델
 
+	// Create the model object.
+	m_BarColModel = new ModelClass;
+	if (!m_BarColModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_BarColModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Stage.obj", L"../Engine/data/Stage.jpg");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the Stage model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	
+		// Create the model object.
+	m_BarRowModel = new ModelClass;
+	if (!m_BarRowModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_BarRowModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Stage.obj", L"../Engine/data/Stage.jpg");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the Stage model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	//////////라이트
 	// Create the light shader object.
 	m_LightShader = new LightShaderClass;
 	if(!m_LightShader)
@@ -434,7 +469,7 @@ bool GraphicsClass::Render(float rotation)
 	// right 벽 조절
 
 		D3DXMatrixScaling(&tmpMatrix, 0.02f, 0.6f, 10.0f);
-		D3DXMatrixTranslation(&worldMatrix, 3002.0f, -5.5f, -3.4f);
+		D3DXMatrixTranslation(&worldMatrix, 2502.0f, -5.5f, -3.4f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
 
@@ -467,6 +502,46 @@ bool GraphicsClass::Render(float rotation)
 
 	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_StageModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
 		m_StageModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+	// 바 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.1f, 2.0f, 1.0f);
+	D3DXMatrixTranslation(&worldMatrix,300.0f, -2.5f, -10.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_BarColModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_BarColModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_BarColModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+
+		D3DXMatrixScaling(&tmpMatrix, 0.5f, 2.0f, 0.15f);
+	D3DXMatrixTranslation(&worldMatrix, 80.0f, -2.5f, -118.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_BarRowModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_BarRowModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_BarRowModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
 		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
 	if (!result)
 	{

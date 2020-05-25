@@ -53,6 +53,8 @@ private:
 	ModelClass* m_BackWallModel;
 	ModelClass* m_LeftWallModel;
 	ModelClass* m_RightWallModel;
+	ModelClass* m_BarColModel;
+	ModelClass* m_BarRowModel;
 	ModelClass* m_StageModel;
 
 	LightShaderClass* m_LightShader;
