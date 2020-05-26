@@ -58,6 +58,8 @@ private:
 	ModelClass* m_StageModel;
 	ModelClass* m_TableModel;
 	ModelClass* m_GirlModel;
+	ModelClass* m_PianoModel;
+	ModelClass* m_StoolModel;
 
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;

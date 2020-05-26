@@ -8,6 +8,7 @@ GraphicsClass::GraphicsClass()
 {
 	m_D3D = 0;
 	m_Camera = 0;
+
 	m_DogHeadModel = 0;
 	m_DogBodyModel = 0;
 	m_BackWallModel = 0;
@@ -18,7 +19,9 @@ GraphicsClass::GraphicsClass()
 	m_FloorModel = 0;
 	m_StageModel = 0;
 	m_TableModel = 0;
-	m_TableModel = 0;
+	m_PianoModel = 0;
+	m_StoolModel = 0;
+
 	m_LightShader = 0;
 	m_Light = 0;
 }
@@ -247,6 +250,41 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the dog head model object.", L"Error", MB_OK);
 		return false;
 	}
+
+	// Piano
+
+	// Create the model object.
+	m_PianoModel = new ModelClass;
+	if (!m_PianoModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_PianoModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Piano.obj", L"../Engine/data/Piano.png");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the dog body model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	// Stool
+
+	// Create the model object.
+	m_StoolModel = new ModelClass;
+	if (!m_StoolModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_StoolModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Stool.obj", L"../Engine/data/Stool.png");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the dog body model object.", L"Error", MB_OK);
+		return false;
+	}
+
 
 	//////////라이트
 	// Create the light shader object.
@@ -500,7 +538,7 @@ bool GraphicsClass::Render(float rotation)
 
 	// left 벽 조절
 
-	D3DXMatrixScaling(&tmpMatrix, 0.02f, 0.6f, 10.0f);
+	D3DXMatrixScaling(&tmpMatrix, 0.02f, 0.6f, 15.0f);
 	D3DXMatrixTranslation(&worldMatrix, -1002.0f, -5.5f, -3.4f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
@@ -521,7 +559,7 @@ bool GraphicsClass::Render(float rotation)
 
 	// right 벽 조절
 
-		D3DXMatrixScaling(&tmpMatrix, 0.02f, 0.6f, 10.0f);
+		D3DXMatrixScaling(&tmpMatrix, 0.02f, 0.6f, 15.0f);
 		D3DXMatrixTranslation(&worldMatrix, 2502.0f, -5.5f, -3.4f);
 	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
 
@@ -667,6 +705,93 @@ bool GraphicsClass::Render(float rotation)
 		return false;
 	}
 
+	// 피아노 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 0.7f);
+	D3DXMatrixTranslation(&worldMatrix, -20.0f, -1.4f, 6.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_PianoModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_PianoModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_PianoModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Stool1 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 0.7f);
+	D3DXMatrixTranslation(&worldMatrix, 33.0f, -5.0f, 0.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_StoolModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_StoolModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_StoolModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Stool2 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 0.7f);
+	D3DXMatrixTranslation(&worldMatrix, 33.0f, -5.0f, -15.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_StoolModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_StoolModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_StoolModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Stool3 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 0.7f);
+	D3DXMatrixTranslation(&worldMatrix, 33.0f, -5.0f, -30.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_StoolModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_StoolModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_StoolModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
 
 	// Present the rendered scene to the screen.
 	m_D3D->EndScene();
