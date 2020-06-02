@@ -10,6 +10,7 @@ ModelClass::ModelClass()
 	m_indexBuffer = 0;
 	m_Texture = 0;
 	m_model = 0;
+	m_faceCount = 0;
 }
 
 
@@ -80,6 +81,12 @@ void ModelClass::Render(ID3D11DeviceContext* deviceContext)
 int ModelClass::GetIndexCount()
 {
 	return m_indexCount;
+}
+
+int ModelClass::GetFaceCount()
+{
+
+	return m_faceCount;
 }
 
 
@@ -324,6 +331,7 @@ bool ModelClass::LoadModel(char* filename)
 	fin.close();
 
 	// Set the number of indices to be the same as the vertex count.
+	m_faceCount = faceCount;
 	m_vertexCount = faceCount * 3;
 	m_indexCount = m_vertexCount;
 	// Create the model using the vertex count that was read in.

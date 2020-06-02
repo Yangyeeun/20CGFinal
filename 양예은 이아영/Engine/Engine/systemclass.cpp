@@ -10,6 +10,9 @@ SystemClass::SystemClass()
 	m_Input = 0;
 	m_Graphics = 0;
 	m_Sound = 0;
+	m_Fps = 0;
+	m_Cpu = 0;
+	m_Timer = 0;
 }
 
 
@@ -74,6 +77,37 @@ bool SystemClass::Initialize()
 		MessageBox(m_hwnd, L"Could not initialize Direct Sound.", L"Error", MB_OK);
 		return false;
 	}
+
+	// Create the fps object.
+	m_Fps = new FpsClass;
+	if (!m_Fps)
+	{
+		return false;
+	}
+
+	// Initialize the fps object.
+	m_Fps->Initialize();
+
+	// Create the cpu object.
+	m_Cpu = new CpuClass;
+	if (!m_Cpu)
+	{
+		return false;
+	}
+
+	// Initialize the cpu object.
+	m_Cpu->Initialize();
+
+	// Create the timer object.
+	m_Timer = new TimerClass;
+	if (!m_Timer)
+	{
+		return false;
+	}
+
+	// Initialize the timer object.
+	result = m_Timer->Initialize();
+
 	
 	return true;
 }
@@ -102,6 +136,27 @@ void SystemClass::Shutdown()
 		delete m_Input;
 		m_Input = 0;
 	}
+	// Release the timer object.
+	if (m_Timer)
+	{
+		delete m_Timer;
+		m_Timer = 0;
+	}
+
+	// Release the cpu object.
+	if (m_Cpu)
+	{
+		m_Cpu->Shutdown();
+		delete m_Cpu;
+		m_Cpu = 0;
+	}
+
+	// Release the fps object.
+	if (m_Fps)
+	{
+		delete m_Fps;
+		m_Fps = 0;
+	}
 
 	// Shutdown the window.
 	ShutdownWindows();
@@ -115,6 +170,8 @@ void SystemClass::Run()
 	MSG msg;
 	bool done, result;
 
+	//¾Æ¿µ
+	float camera_rotation_y = 0.2f;
 
 	// Initialize the message structure.
 	ZeroMemory(&msg, sizeof(MSG));
@@ -141,20 +198,29 @@ void SystemClass::Run()
 			/*WASD Moving*/
 			if (m_Input->IsKeyDown(87))//W
 			{
-				m_Graphics->MovingCamera(1);
+				m_Graphics->MovingCamera(1, camera_rotation_y);
 			}
 			else if (m_Input->IsKeyDown(83))//S
 			{
-				m_Graphics->MovingCamera(2);
+				m_Graphics->MovingCamera(2, camera_rotation_y);
 			}
 			if (m_Input->IsKeyDown(65))//A
 			{
-				m_Graphics->MovingCamera(3);
+				m_Graphics->MovingCamera(3, camera_rotation_y);
 			}
 			else if (m_Input->IsKeyDown(68))//D
 			{
-				m_Graphics->MovingCamera(4);
+				m_Graphics->MovingCamera(4, camera_rotation_y);
 			}
+			if (m_Input->IsKeyDown(81))//Q
+			{
+				m_Graphics->MovingCamera(5, camera_rotation_y);
+			}
+			else if (m_Input->IsKeyDown(69))//E
+			{
+				m_Graphics->MovingCamera(6, camera_rotation_y);
+			}
+
 
 			// Otherwise do the frame processing.
 			result = Frame();
@@ -174,6 +240,10 @@ bool SystemClass::Frame()
 {
 	bool result;
 
+	// Update the system stats.
+	m_Timer->Frame();
+	m_Fps->Frame();
+	m_Cpu->Frame();
 
 	// Check if the user pressed escape and wants to exit the application.
 	if(m_Input->IsKeyDown(VK_ESCAPE))
@@ -182,7 +252,7 @@ bool SystemClass::Frame()
 	}
 
 	// Do the frame processing for the graphics object.
-	result = m_Graphics->Frame();
+	result = m_Graphics->Frame(m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime());
 	if(!result)
 	{
 		return false;

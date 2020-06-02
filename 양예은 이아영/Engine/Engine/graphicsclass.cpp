@@ -2,6 +2,7 @@
 // Filename: graphicsclass.cpp
 ////////////////////////////////////////////////////////////////////////////////
 #include "graphicsclass.h"
+#include <math.h>
 
 
 GraphicsClass::GraphicsClass()
@@ -21,9 +22,14 @@ GraphicsClass::GraphicsClass()
 	m_TableModel = 0;
 	m_PianoModel = 0;
 	m_StoolModel = 0;
+	m_CoffeeGrinderModel = 0;
+	m_BookShelfModel = 0;
 
 	m_LightShader = 0;
 	m_Light = 0;
+	m_Text = 0;
+
+	polygon_used = 0;
 }
 
 
@@ -40,6 +46,8 @@ GraphicsClass::~GraphicsClass()
 bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	bool result;
+	D3DXMATRIX baseViewMatrix;
+
 
 
 	// Create the Direct3D object.
@@ -64,6 +72,26 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// Initialize a base view matrix with the camera for 2D user interface rendering. 
+	m_Camera->SetPosition(0.0f, 0.0f, -1.0f);
+	m_Camera->Render();
+	m_Camera->GetViewMatrix(baseViewMatrix);
+
+	// Create the text object.
+	m_Text = new TextClass;
+	if (!m_Text)
+	{
+		return false;
+	}
+
+	// Initialize the text object. 
+	result = m_Text->Initialize(m_D3D->GetDevice(), m_D3D->GetDeviceContext(), hwnd, screenWidth, screenHeight, baseViewMatrix);
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the text object.", L"Error", MB_OK); return false;
+	}
+
+
 	// Set the initial position of the camera.
 	m_Camera->SetPosition(0.0f, 20.0f, -50.0f);
 	m_Camera->SetRotation(20.0f, 0.0f, 0.0f);
@@ -86,6 +114,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	polygon_used += m_GirlModel->GetFaceCount();
+
 	// 강아지 몸
 
 	// Create the model object.
@@ -102,6 +132,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the dog body model object.", L"Error", MB_OK);
 		return false;
 	}
+
+	polygon_used += m_DogBodyModel->GetFaceCount();
 
 	// 강아지 얼굴
 
@@ -120,6 +152,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	polygon_used += m_DogHeadModel->GetFaceCount();
+
 	// 바닥 모델
 
 	// Create the model object.
@@ -136,6 +170,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the floor model object.", L"Error", MB_OK);
 		return false;
 	}
+
+	polygon_used += m_FloorModel->GetFaceCount();
 
 	// 벽 모델
 
@@ -154,6 +190,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	polygon_used += m_BackWallModel->GetFaceCount();
+
 
 	m_LeftWallModel = new ModelClass;
 	if (!m_LeftWallModel)
@@ -168,6 +206,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	polygon_used += m_LeftWallModel->GetFaceCount();
+
 	m_RightWallModel = new ModelClass;
 	if (!m_RightWallModel)
 	{
@@ -181,6 +221,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the BackWall model object.", L"Error", MB_OK);
 		return false;
 	}
+
+	polygon_used += m_RightWallModel->GetFaceCount();
 
 	
 
@@ -201,6 +243,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	polygon_used += m_StageModel->GetFaceCount();
+
 	// 바 모델
 
 	// Create the model object.
@@ -218,6 +262,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	polygon_used += m_BarColModel->GetFaceCount();
+
 	
 		// Create the model object.
 	m_BarRowModel = new ModelClass;
@@ -233,6 +279,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the Stage model object.", L"Error", MB_OK);
 		return false;
 	}
+
+	polygon_used += m_BarRowModel->GetFaceCount();
 
 	// 테이블
 
@@ -251,6 +299,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	polygon_used += m_TableModel->GetFaceCount();
+
 	// Piano
 
 	// Create the model object.
@@ -267,6 +317,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the dog body model object.", L"Error", MB_OK);
 		return false;
 	}
+
+	polygon_used += m_PianoModel->GetFaceCount();
 
 	// Stool
 
@@ -285,6 +337,64 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	polygon_used += m_StoolModel->GetFaceCount();
+
+	// 커피그라인더 모델
+
+	// Create the model object.
+	m_CoffeeGrinderModel = new ModelClass;
+	if (!m_CoffeeGrinderModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_CoffeeGrinderModel->Initialize(m_D3D->GetDevice(), "../Engine/data/CoffeeGrinder.obj", L"../Engine/data/CoffeeGrinder.png");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the CoffeeGrinder model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	polygon_used += m_CoffeeGrinderModel->GetFaceCount();
+
+	// 바 모델
+
+	// Create the model object.
+	m_BookShelfModel = new ModelClass;
+	if (!m_BookShelfModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_BookShelfModel->Initialize(m_D3D->GetDevice(), "../Engine/data/BookShelf_.obj", L"../Engine/data/BookShelf.png");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the bookshelf model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	polygon_used += m_BookShelfModel->GetFaceCount();
+
+	// Frame
+
+	// Create the model object.
+	m_FrameModel = new ModelClass;
+	if (!m_FrameModel)
+	{
+		return false;
+	}
+
+	// Initialize the model object.
+	result = m_FrameModel->Initialize(m_D3D->GetDevice(), "../Engine/data/Frame.obj", L"../Engine/data/Frame.png");
+	if (!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the dog body model object.", L"Error", MB_OK);
+		return false;
+	}
+
+	polygon_used += m_FrameModel->GetFaceCount();
 
 	//////////라이트
 	// Create the light shader object.
@@ -301,6 +411,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"Could not initialize the light shader object.", L"Error", MB_OK);
 		return false;
 	}
+
 
 	// Create the light object.
 	m_Light = new LightClass;
@@ -354,6 +465,13 @@ void GraphicsClass::Shutdown()
 		m_DogHeadModel = 0;
 	}
 
+	// Release the text object.
+	if (m_Text)
+	{
+		m_Text->Shutdown();
+		delete m_Text;
+		m_Text = 0;
+	}
 
 	// Release the camera object.
 	if(m_Camera)
@@ -374,11 +492,36 @@ void GraphicsClass::Shutdown()
 }
 
 
-bool GraphicsClass::Frame()
+bool GraphicsClass::Frame(int fps, int cpu, float frameTime)
 {
 	bool result;
 	static float rotation = 0.0f;
 	static bool rotation_direction = true;//위
+
+	// Set the frames per second.
+	result = m_Text->SetFps(fps, m_D3D->GetDeviceContext());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Set the cpu usage.
+	result = m_Text->SetCpu(cpu, m_D3D->GetDeviceContext());
+	if (!result)
+	{
+		return false;
+	}
+
+	
+	
+	// Set the polygon usage.
+	result = m_Text->SetPolygon(polygon_used, m_D3D->GetDeviceContext());
+	if (!result)
+	{
+		return false;
+	}
+	
+	
 
 
 	// Update the rotation variable each frame.
@@ -410,25 +553,33 @@ bool GraphicsClass::Frame()
 	return true;
 }
 
-void GraphicsClass::MovingCamera(int n)
+void GraphicsClass::MovingCamera(int n, float rotation_y)
 {
 	float speed = 0.2f;
-	
+	D3DXMATRIX viewMatrix;
 	if (n == 1)
 	{
-		m_Camera->SetPosition(m_Camera->GetPosition().x, m_Camera->GetPosition().y, m_Camera->GetPosition().z + speed);
+		m_Camera->SetPosition(m_Camera->GetPosition().x+speed*m_Camera->GetMLookAt().x, m_Camera->GetPosition().y, m_Camera->GetPosition().z+ speed * m_Camera->GetMLookAt().z);
 	}
 	else if (n == 2)
 	{
-		m_Camera->SetPosition(m_Camera->GetPosition().x, m_Camera->GetPosition().y, m_Camera->GetPosition().z - speed);
+		m_Camera->SetPosition(m_Camera->GetPosition().x - speed * m_Camera->GetMLookAt().x, m_Camera->GetPosition().y, m_Camera->GetPosition().z - speed * m_Camera->GetMLookAt().z);
 	}
 	else if (n == 3)
 	{
-		m_Camera->SetPosition(m_Camera->GetPosition().x - speed, m_Camera->GetPosition().y, m_Camera->GetPosition().z);
+		m_Camera->SetPosition(m_Camera->GetPosition().x - speed * m_Camera->GetMLookAt().z, m_Camera->GetPosition().y, m_Camera->GetPosition().z + speed * m_Camera->GetMLookAt().x);
 	}
 	else if (n == 4)
 	{
-		m_Camera->SetPosition(m_Camera->GetPosition().x + speed, m_Camera->GetPosition().y, m_Camera->GetPosition().z);
+		m_Camera->SetPosition(m_Camera->GetPosition().x + speed * m_Camera->GetMLookAt().z, m_Camera->GetPosition().y, m_Camera->GetPosition().z - speed * m_Camera->GetMLookAt().x);
+	}
+	else if (n == 5)
+	{
+		m_Camera->SetRotation(m_Camera->GetRotation().x, m_Camera->GetRotation().y-rotation_y, m_Camera->GetRotation().z);
+	}
+	else if (n == 6)
+	{
+		m_Camera->SetRotation(m_Camera->GetRotation().x, m_Camera->GetRotation().y+rotation_y, m_Camera->GetRotation().z);
 	}
 	return;
 }
@@ -436,7 +587,7 @@ void GraphicsClass::MovingCamera(int n)
 
 bool GraphicsClass::Render(float rotation)
 {
-	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix ,tmpMatrix; //아영
+	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix ,tmpMatrix, orthoMatrix; //아영
 	bool result;
 
 
@@ -705,6 +856,28 @@ bool GraphicsClass::Render(float rotation)
 		return false;
 	}
 
+	// Frame 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.3f, 0.3f, 0.3f);
+	D3DXMatrixTranslation(&worldMatrix, 60.0f, 23.0f, 22.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_FrameModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_FrameModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_FrameModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
 	// 피아노 조절
 
 	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 0.7f);
@@ -793,8 +966,85 @@ bool GraphicsClass::Render(float rotation)
 		return false;
 	}
 
+	// Coffee Grinder 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.2f, 0.2f, 0.2f);
+	D3DXMatrixTranslation(&worldMatrix, 150.0f, 15.0f, 0.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_CoffeeGrinderModel->Render(m_D3D->GetDeviceContext());
+
+	 
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_CoffeeGrinderModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_CoffeeGrinderModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// bookshelf 조절
+
+	D3DXMatrixScaling(&tmpMatrix, 0.7f, 0.7f, 0.7f);
+	D3DXMatrixTranslation(&worldMatrix, 65.0f, -6.0f, -60.0f);
+	D3DXMatrixMultiply(&worldMatrix, &worldMatrix, &tmpMatrix);
+
+
+
+	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+	m_BookShelfModel->Render(m_D3D->GetDeviceContext());
+
+
+	// Render the model using the light shader.
+
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_BookShelfModel->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_BookShelfModel->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	if (!result)
+	{
+		return false;
+	}
+
+	// Get the world, view, and projection matrices from the camera and d3d objects.
+	m_Camera->GetViewMatrix(viewMatrix);
+	m_D3D->GetWorldMatrix(worldMatrix);
+	m_D3D->GetProjectionMatrix(projectionMatrix);
+	m_D3D->GetOrthoMatrix(orthoMatrix);
+
+	// Turn off the Z buffer to begin all 2D rendering. 
+	m_D3D->TurnZBufferOff();
+	// Turn on the alpha blending before rendering the text. 
+	m_D3D->TurnOnAlphaBlending();
+
+	// Render the text strings. 
+	result = m_Text->Render(m_D3D->GetDeviceContext(), worldMatrix, orthoMatrix);
+	if (!result)
+	{
+		return false;
+	}
+
+	// Turn off alpha blending after rendering the text. 
+	m_D3D->TurnOffAlphaBlending();
+	// Turn the Z buffer back on now that all 2D rendering has completed.
+	m_D3D->TurnZBufferOn();
+
+
+
+
 	// Present the rendered scene to the screen.
 	m_D3D->EndScene();
 
 	return true;
+}
+
+int GraphicsClass::PolygonUsed()
+{
+
+
+	return polygon_used;
 }

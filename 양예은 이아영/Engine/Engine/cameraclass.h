@@ -26,11 +26,13 @@ public:
 
 	D3DXVECTOR3 GetPosition();
 	D3DXVECTOR3 GetRotation();
+	D3DXVECTOR3 GetMLookAt();
 
 	void Render();
 	void GetViewMatrix(D3DXMATRIX&);
 
 private:
+	D3DXVECTOR3 m_lookAt;//¾Æ¿µ
 	float m_positionX, m_positionY, m_positionZ;
 	float m_rotationX, m_rotationY, m_rotationZ;
 	D3DXMATRIX m_viewMatrix;

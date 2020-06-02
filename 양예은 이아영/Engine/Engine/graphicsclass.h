@@ -13,6 +13,7 @@
 #include "modelclass.h"
 #include "lightshaderclass.h"
 #include "lightclass.h"
+#include "textclass.h"
 
 
 /////////////
@@ -36,8 +37,9 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame();
-	void MovingCamera(int);
+	bool Frame(int, int, float);
+	void MovingCamera(int, float);
+	int PolygonUsed();//¾Æ¿µ
 
 private:
 	bool Render(float);
@@ -60,9 +62,15 @@ private:
 	ModelClass* m_GirlModel;
 	ModelClass* m_PianoModel;
 	ModelClass* m_StoolModel;
+	ModelClass* m_CoffeeGrinderModel;
+	ModelClass* m_BookShelfModel;
+	ModelClass* m_FrameModel;
 
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
+	TextClass* m_Text;
+
+	int polygon_used;
 };
 
 #endif
